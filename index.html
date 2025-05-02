@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>City & Village Weather App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://images.pexels.com/photos/209831/pexels-photo-209831.jpeg?cs=srgb&dl=pexels-pixabay-209831.jpg&fm=jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      text-align: center;
+      padding: 40px;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 36px;
+      color: #fff;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    #weather {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+      border-radius: 15px;
+      backdrop-filter: blur(10px); /* Frosted glass effect */
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    input, button {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      margin: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    img {
+      width: 80px;
+      height: 80px;
+      margin-top: 10px;
+    }
+
+    input::placeholder {
+      color: white;
+    }
+
+    .temperature {
+      font-size: 32px;
+      color: white;
+    }
+
+    .description, .humidity, .wind, .rain {
+      color: white;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div>
+    <h1>🌦 Weather by City </h1>
+    <input type="text" id="locationInput" placeholder="Enter city" />
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="weather"></div>
+  </div>
+
+  <script>
+    async function getWeather() {
+      const apiKey = 'b8829db219b081e7d6a6d185e1de3aa5'; // Your API key
+      const location = document.getElementById('locationInput').value.trim();
+
+      if (!location) {
+        document.getElementById('weather').innerHTML = "<p>Please enter a city or village name.</p>";
+        return;
+      }
+
+      // Function to fetch weather data for a given location
+      async function fetchWeather(location) {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`;
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.cod === 200) {
+            const icon = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+            // Extract rain data (if available)
+            const rain = data.rain ? data.rain['1h'] : null;
+            const rainMessage = rain !== null ? `<p class="rain">Rain in the last hour: ${rain} mm</p>` : '';
+
+            return {
+              location: data.name,
+              country: data.sys.country,
+              temp: data.main.temp,
+              description: data.weather[0].description,
+              humidity: data.main.humidity,
+              wind: data.wind.speed,
+              icon: icon,
+              rainMessage: rainMessage
+            };
+          } else {
+            return { error: data.message };
+          }
+        } catch (error) {
+          return { error: "Error fetching weather data." };
+        }
+      }
+
+      const weatherData = await fetchWeather(location);
+      let weatherContent = "";
+
+      if (weatherData.error) {
+        weatherContent = `<p>Error: ${weatherData.error}</p>`;
+      } else {
+        weatherContent = `
+          <h2>${weatherData.location}, ${weatherData.country}</h2>
+          <img src="${weatherData.icon}" alt="${weatherData.description}" />
+          <p class="temperature"><strong>${weatherData.temp}°C</strong> - ${weatherData.description}</p>
+          <p class="humidity">Humidity: ${weatherData.humidity}%</p>
+          <p class="wind">Wind: ${weatherData.wind} m/s</p>
+          ${weatherData.rainMessage}`;
+      }
+
+      document.getElementById('weather').innerHTML = weatherContent;
+    }
+
+    // Allow Enter key to trigger search
+    document.getElementById('locationInput').addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        getWeather();
+      }
+    });
+  </script>
+
+</body>
+</html>
